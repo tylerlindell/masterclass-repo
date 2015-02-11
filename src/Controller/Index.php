@@ -15,7 +15,7 @@ class Index {
     /**
      * @var Story
      */
-    protected $model;
+    protected $storyModel;
 
     /**
      * @var array
@@ -25,9 +25,8 @@ class Index {
     /**
      * @param array $config
      */
-    public function __construct($config) {
-        $this->config = $config;
-        $this->model = new Story($config);
+    public function __construct(Story $story) {
+        $this->storyModel = $story;
     }
 
     /**
@@ -35,7 +34,7 @@ class Index {
      * @return void -displays the index page
      */
     public function index() {
-        $stories = $this->model->getStoryList();
+        $stories = $this->storyModel->getStoryList();
         
         $content = '<ol>';
         
@@ -52,7 +51,7 @@ class Index {
         
         $content .= '</ol>';
         
-        require $this->config['path'] . '/layout.phtml';
+        require '../layout.phtml';
     }
 }
 

@@ -15,8 +15,8 @@ class Comment {
     /**
      * @param array $config
      */
-    public function __construct($config) {
-        $this->commentModel = new CommentModel($config);
+    public function __construct(CommentModel $comment) {
+        $this->commentModel = $comment;
     }
     
     /**

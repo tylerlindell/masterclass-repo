@@ -2,6 +2,8 @@
 
 namespace Masterclass\FrontController;
 
+use Aura\Di\Container;
+
 class MasterController {
     
     /**
@@ -9,12 +11,19 @@ class MasterController {
      * @var array
      */
     private $config;
+
+    /**
+     * array containing configuration and routing details
+     * @var Container
+     */
+    private $container;
     
     /**
      * @param array $config
      */
-    public function __construct($config) {
-        $this->_setupConfig($config);
+    public function __construct(Container $container, array $config = []) {
+        $this->config = $config;
+        $this->container = $container;
     }
     
     /**
@@ -26,7 +35,7 @@ class MasterController {
         $call_class = $call['call'];
         $class = ucfirst(array_shift($call_class));
         $method = array_shift($call_class);
-        $o = new $class($this->config);
+        $o = $this->container->newInstance($class);
         return $o->$method();
     }
     
@@ -34,7 +43,7 @@ class MasterController {
      * get the controller that we are supposed to run
      * @return array
      */
-    private function _determineControllers()
+    protected function _determineControllers()
     {
         if (isset($_SERVER['REDIRECT_BASE'])) {
             $rb = $_SERVER['REDIRECT_BASE'];
@@ -60,15 +69,6 @@ class MasterController {
         }
         
         return $return;
-    }
-    
-    /**
-     * assign variable
-     * @param  array $config
-     * @return void
-     */
-    private function _setupConfig($config) {
-        $this->config = $config;
     }
     
 }

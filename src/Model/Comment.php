@@ -15,15 +15,11 @@ class Comment
 	protected $db;
 	
 	/**
-	 * @param array $config
+	 * @param PDO $pdo
 	 */
-	function __construct($config)
+	function __construct(PDO $pdo)
 	{ 
-		$this->config = $config;
-        $dbconfig = $config['database'];
-        $dsn = 'mysql:host=' . $dbconfig['host'] . ';dbname=' . $dbconfig['name'];
-        $this->db = new PDO($dsn, $dbconfig['user'], $dbconfig['pass']);
-        $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->db = $pdo;
 	}
 
 	/**

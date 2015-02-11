@@ -15,9 +15,8 @@ class User {
     /**
      * @param array $config
      */
-    public function __construct($config) {
-        $this->config = $config;
-        $this->userModel = new UserModel($config);
+    public function __construct(UserModel $user) {
+        $this->userModel = $user;
     }
     
     /**
@@ -121,7 +120,7 @@ class User {
             <input type="submit" name="updatepw" value="Create User" />
         </form>';
         
-        require_once $this->config['path'] . '/layout.phtml';
+        require_once '../layout.phtml';
     }
     
     /**
@@ -153,7 +152,7 @@ class User {
             </form>
         ';
         
-        require_once($this->config['path'] . '/layout.phtml');
+        require_once('../layout.phtml');
         
     }
     
