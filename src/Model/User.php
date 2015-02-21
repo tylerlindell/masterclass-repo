@@ -2,7 +2,7 @@
 
 namespace Masterclass\Model;
 
-use PDO;
+use Masterclass\Dbal\AbstractDb;
 
 /**
 * User Model
@@ -18,9 +18,9 @@ class User
 	/**
 	 * @param PDO $pdo
 	 */
-	function __construct(PDO $pdo)
+	function __construct(AbstractDb $db)
 	{
-        $this->db = $pdo;
+        $this->db = $db;
 	}
 
 	/**
@@ -31,9 +31,8 @@ class User
 	public function check($username)
 	{
 		$check_sql = 'SELECT * FROM user WHERE username = ?';
-        $check_stmt = $this->db->prepare($check_sql);
-        $check_stmt->execute(array($username));
-        if($check_stmt->rowCount() > 0)
+        $this->db->execute($check_sql, [$username]);
+        if($this->db->rowCount() > 0)
         	return true;
 	}
 
@@ -43,8 +42,7 @@ class User
 	public function addNewUser($params)
 	{
 		$sql = 'INSERT INTO user (username, email, password) VALUES (?, ?, ?)';
-        $stmt = $this->db->prepare($sql);
-        $execute = $stmt->execute($params);
+        $execute = $this->db->execute($sql, [$params]);
 
         if($execute)
 	        return true;
@@ -59,8 +57,7 @@ class User
 	public function updatepw($username, $password)
 	{
 		$sql = 'UPDATE user SET password = ? WHERE username = ?';
-        $stmt = $this->db->prepare($sql);
-        $execute = $stmt->execute(array(
+        $execute = $this->db->execute($sql, array(
            md5($username . $password), // THIS IS NOT SECURE. 
            $username,
         ));
@@ -77,9 +74,7 @@ class User
 	public function getUserDetails($username)
 	{
 		$dsql = 'SELECT * FROM user WHERE username = ?';
-        $stmt = $this->db->prepare($dsql);
-        $stmt->execute(array($username));
-        $details = $stmt->fetch(PDO::FETCH_ASSOC);
+        $details = $this->db->fetchOne($dsql, [$username]);
 
         return $details;
 	}
@@ -94,10 +89,9 @@ class User
 	{
         $password = md5($username . $password); // THIS IS NOT SECURE. DO NOT USE IN PRODUCTION.
         $sql = 'SELECT * FROM user WHERE username = ? AND password = ? LIMIT 1';
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute(array($username, $password));
-        if($stmt->rowCount() > 0) {
-           return $stmt->fetch(PDO::FETCH_ASSOC); 
+        $user = $this->db->execute($sql, [$username, $password]);
+        if(count($user) > 0) {
+           return $this->db->fetchOne($sql, [$username, $password]); 
         }
 	}
 }

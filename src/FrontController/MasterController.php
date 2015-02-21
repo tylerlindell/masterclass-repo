@@ -3,27 +3,29 @@
 namespace Masterclass\FrontController;
 
 use Aura\Di\Container;
+use Aura\Web\Response;
+use Masterclass\Router\Router;
 
 class MasterController {
-    
-    /**
-     * array containing configuration and routing details
-     * @var array
-     */
-    private $config;
 
     /**
      * array containing configuration and routing details
      * @var Container
      */
-    private $container;
+    protected $container;
+
+    /**
+     * @var Router
+     */
+    protected $router;
     
     /**
      * @param array $config
      */
-    public function __construct(Container $container, array $config = []) {
+    public function __construct(Container $container, array $config = [], Router $router) {
         $this->config = $config;
         $this->container = $container;
+        $this->router = $router;
     }
     
     /**
@@ -31,12 +33,44 @@ class MasterController {
      * @return mixed -what ever is returned by the method via the object called.
      */
     public function execute() {
-        $call = $this->_determineControllers();
-        $call_class = $call['call'];
-        $class = ucfirst(array_shift($call_class));
-        $method = array_shift($call_class);
+        $match = $this->_determineControllers();
+
+        $calling = $match->getRouteClass();
+        list($class, $method) = explode(':', $calling);
         $o = $this->container->newInstance($class);
-        return $o->$method();
+        $response = $o->$method();
+        if($response instanceof Response){
+            $this->sendResponse($response);
+        }
+    }
+
+    public function sendResponse(Response $response)
+    {
+       header($response->status->get(), true, $response->status->getCode());
+
+       //send non-cookie headers
+       foreach ($response->headers->get() as $label => $value) {
+           header("{$label}: {$value}");
+       }
+
+       //send cookies
+       foreach ($response->cookies->get() as $name => $cookie) {
+           setcookie(
+                $name,
+                $cookie['value'],
+                $cookie['expire'],
+                $cookie['path'],
+                $cookie['domain'],
+                $cookie['secure'],
+                $cookie['httponly']
+            );
+       }
+       header('Connection: close');
+
+
+       // send content
+       print($response->content->get());
+
     }
     
     /**
@@ -45,30 +79,15 @@ class MasterController {
      */
     protected function _determineControllers()
     {
-        if (isset($_SERVER['REDIRECT_BASE'])) {
-            $rb = $_SERVER['REDIRECT_BASE'];
-        } else {
-            $rb = '';
-        }
+       $router = $this->router;
+       $match = $router->findMatch();
+
+       if(!$match){
+            throw new \Exception('No route match found!');
+            
+       }
         
-        $ruri = $_SERVER['REQUEST_URI'];
-        $path = str_replace($rb, '', $ruri);
-        $return = array();
-        
-        foreach($this->config['routes'] as $k => $v) {
-            $matches = array();
-            $pattern = '$' . $k . '$';
-            if(preg_match($pattern, $path, $matches))
-            {
-                $controller_details = $v;
-                $path_string = array_shift($matches);
-                $arguments = $matches;
-                $controller_method = explode(':', $controller_details);
-                $return = array('call' => $controller_method);
-            }
-        }
-        
-        return $return;
+        return $match;
     }
     
 }

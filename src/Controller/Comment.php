@@ -2,7 +2,8 @@
 
 namespace Masterclass\Controller;
 
-use PDO;
+use Aura\Web\Request;
+use Aura\Web\Response;
 use Masterclass\Model\Comment as CommentModel;
 
 class Comment {
@@ -11,12 +12,26 @@ class Comment {
      * @var CommentModel
      */
     protected $commentModel;
+    /**
+     * @var Request
+     */
+    protected $request;
+    /**
+     * @var Response
+     */
+    protected $response;
     
     /**
      * @param array $config
      */
-    public function __construct(CommentModel $comment) {
+    public function __construct(
+        CommentModel $comment,
+        Request $request,
+        Response $response
+    ) {
         $this->commentModel = $comment;
+        $this->request = $request;
+        $this->response = $response;
     }
     
     /**
@@ -29,8 +44,13 @@ class Comment {
             exit;
         }
 
-        $storyId = $this->commentModel->postNewComment($_SESSION['username'], $_POST['story_id'], $_POST['comment']);
-        header("Location: /story/?id=" . $_POST['story_id']);
+        $username = $_SESSION['username'];
+        $storyId = $this->request->post->get('story_id');
+        $comment  = $this->request->post->get('comment');
+
+        $this->commentModel->postNewComment($username, $storyId, $comment);
+        $this->response->redirect->to('/story?id=' . (int)$storyId);
+        return $this->response;
     }
     
 }
